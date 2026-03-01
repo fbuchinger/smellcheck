@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smellcheck — AI Text Fingerprint Detector</title>
+  <title>Smellcheck — Detecting AI smells in your text</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
@@ -465,8 +465,8 @@
 <body>
 
 <header>
-  <div class="logo">smellcheck</div>
-  <div class="logo-sub">AI text fingerprint detector</div>
+  <div class="logo">👃 smellcheck</div>
+  <div class="logo-sub">detecting AI smells in your texts</div>
 </header>
 
 <main>
@@ -482,7 +482,7 @@
     </div>
     <textarea
       id="input"
-      placeholder="Paste or type text here to analyze it for AI fingerprints…"
+      placeholder="Paste or type text here to analyze it for AI smells…"
       spellcheck="false"
     ></textarea>
   </div>
@@ -827,7 +827,7 @@ function run() {
   // Status
   badge.className = `status-badge ${result.flagged ? 'flagged' : 'clean'}`;
   label.textContent = result.flagged
-    ? `${result.allMatches.length} fingerprint${result.allMatches.length !== 1 ? 's' : ''} found`
+    ? `${result.allMatches.length} AI smell${result.allMatches.length !== 1 ? 's' : ''} found`
     : 'Looks clean';
 
   // Counts
