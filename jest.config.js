@@ -4,11 +4,13 @@ export default {
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
-    // Strip .js extensions so Jest resolves TypeScript files correctly
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transform: {
-    '^.+\\.ts$': ['ts-jest', { useESM: true }],
+    '^.+\\.ts$': ['ts-jest', {
+      useESM: true,
+      tsconfig: './tsconfig.test.json',
+    }],
   },
   testMatch: ['**/tests/**/*.test.ts'],
 };

@@ -20,8 +20,8 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
   },
   "devDependencies": {
     "@types/jest": "^29.0.0",
@@ -31,6 +31,12 @@
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
-  "keywords": ["ai", "detection", "text-analysis", "cli", "nlp"],
+  "keywords": [
+    "ai",
+    "detection",
+    "text-analysis",
+    "cli",
+    "nlp"
+  ],
   "license": "MIT"
 }
