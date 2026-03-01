@@ -1,4 +1,4 @@
-import type { SlobPlugin, PluginResult, Match, TypographyPluginConfig } from '../types.js';
+import type { PatternPlugin, PluginResult, Match, TypographyPluginConfig } from '../types.js';
 
 /**
  * Characters that are hallmarks of AI-generated or auto-formatted text.
@@ -20,7 +20,7 @@ const SUSPICIOUS_CHARS: Array<{ pattern: RegExp; reason: string }> = [
   { pattern: /\u2002|\u2003|\u2004|\u2005|\u2006|\u2009|\u200A/g, reason: 'Typographic space variant' },
 ];
 
-export class TypographyPlugin implements SlobPlugin {
+export class TypographyPlugin implements PatternPlugin {
   readonly name = 'typography';
   private patterns: Array<{ pattern: RegExp; reason: string }>;
 

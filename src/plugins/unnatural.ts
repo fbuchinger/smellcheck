@@ -1,4 +1,4 @@
-import type { SlobPlugin, PluginResult, Match, UnnaturalPluginConfig } from '../types.js';
+import type { PatternPlugin, PluginResult, Match, UnnaturalPluginConfig } from '../types.js';
 
 /**
  * Words that educated humans recognise but almost never type spontaneously.
@@ -105,7 +105,7 @@ function buildPattern(words: string[]): RegExp {
   return new RegExp(`(?<![\\w-])(${escaped.join('|')})(?![\\w-])`, 'gi');
 }
 
-export class UnnaturalPlugin implements SlobPlugin {
+export class UnnaturalPlugin implements PatternPlugin {
   readonly name = 'unnatural';
   private pattern: RegExp;
 

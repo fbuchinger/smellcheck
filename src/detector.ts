@@ -1,69 +1,49 @@
-import type {
-  SlobPlugin,
-  SmellcheckConfig,
-  SmellcheckResult,
-  TypographyPluginConfig,
-  UnicodePluginConfig,
-  BuzzwordsPluginConfig,
-  UnnaturalPluginConfig,
-} from './types.js';
-import { TypographyPlugin } from './plugins/typography.js';
-import { UnicodePlugin } from './plugins/unicode.js';
-import { BuzzwordsPlugin } from './plugins/buzzwords.js';
-import { UnnaturalPlugin } from './plugins/unnatural.js';
-
-function isEnabled(setting: boolean | object | undefined): boolean {
-  if (setting === undefined) return true;  // default on
-  if (typeof setting === 'boolean') return setting;
-  return true; // object config means enabled
-}
-
-function getConfig<T>(setting: boolean | T | undefined): T {
-  if (!setting || typeof setting === 'boolean') return {} as T;
-  return setting;
-}
+import type { PatternPlugin, ScorePlugin, SmellcheckConfig, SmellcheckResult } from './types.js';
+import { createPatternPlugins, createScorePlugins } from './plugins/index.js';
 
 export class Smellcheck {
-  private plugins: SlobPlugin[] = [];
+  private patternPlugins: PatternPlugin[];
+  private scorePlugins: ScorePlugin[];
 
   constructor(config: SmellcheckConfig = {}) {
-    const p = config.plugins ?? {};
-
-    if (isEnabled(p.typography)) {
-      this.plugins.push(new TypographyPlugin(getConfig<TypographyPluginConfig>(p.typography)));
-    }
-    if (isEnabled(p.unicode)) {
-      this.plugins.push(new UnicodePlugin(getConfig<UnicodePluginConfig>(p.unicode)));
-    }
-    if (isEnabled(p.buzzwords)) {
-      this.plugins.push(new BuzzwordsPlugin(getConfig<BuzzwordsPluginConfig>(p.buzzwords)));
-    }
-    if (isEnabled(p.unnatural)) {
-      this.plugins.push(new UnnaturalPlugin(getConfig<UnnaturalPluginConfig>(p.unnatural)));
-    }
+    this.patternPlugins = createPatternPlugins(config);
+    this.scorePlugins   = createScorePlugins(config);
   }
 
-  /**
-   * Register a custom plugin. Allows extending smellcheck with your own analyzers.
-   */
-  use(plugin: SlobPlugin): this {
-    this.plugins.push(plugin);
+  /** Register a custom PatternPlugin or ScorePlugin at runtime */
+  use(plugin: PatternPlugin | ScorePlugin): this {
+    if ('analyze' in plugin) {
+      // Distinguish by return type: ScorePlugin result has 'score' field
+      // We use duck-typing on the plugin name conventions — just push to both
+      // and let the result type be determined at analysis time.
+      // For strict typing, check if the plugin implements ScorePlugin:
+      const result = (plugin as PatternPlugin).analyze('test');
+      if ('score' in result) {
+        this.scorePlugins.push(plugin as ScorePlugin);
+      } else {
+        this.patternPlugins.push(plugin as PatternPlugin);
+      }
+    }
     return this;
   }
 
-  /**
-   * Analyze a text string. Returns per-plugin results and an aggregated summary.
-   */
+  /** Analyse text through all registered plugins */
   analyze(text: string): SmellcheckResult {
-    const pluginResults = this.plugins.map(p => p.analyze(text));
+    const patternResults = this.patternPlugins.map(p => p.analyze(text));
+    const scoreResults   = this.scorePlugins.map(p => p.analyze(text));
 
-    const allMatches = pluginResults
+    const allMatches = patternResults
       .flatMap(r => r.matches)
       .sort((a, b) => a.index - b.index);
 
+    const flagged =
+      patternResults.some(r => r.flagged) ||
+      scoreResults.some(r => !r.skipped && r.score > 0);
+
     return {
-      flagged: pluginResults.some(r => r.flagged),
-      plugins: pluginResults,
+      flagged,
+      plugins: patternResults,
+      scoredPlugins: scoreResults,
       allMatches,
     };
   }

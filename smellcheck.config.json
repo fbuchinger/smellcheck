@@ -3,14 +3,18 @@
     "typography": true,
     "unicode": true,
     "buzzwords": {
-      "enabled": true,
       "extra": [],
       "exclude": []
     },
     "unnatural": {
-      "enabled": true,
       "extra": [],
       "exclude": []
+    },
+    "sentenceUniformity": {
+      "minSentences": 6,
+      "stddevFloor": 4.5,
+      "stddevCeiling": 12.0,
+      "penaltyShort": 0.15
     }
   }
 }

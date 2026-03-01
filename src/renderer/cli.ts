@@ -62,8 +62,8 @@ export function renderCliSummary(result: SmellcheckResult): string {
   for (const pluginResult of result.plugins) {
     if (!pluginResult.flagged) continue;
 
-    const color = PLUGIN_COLORS[pluginResult.plugin] ?? '\x1b[47m';
-    const label = PLUGIN_LABELS[pluginResult.plugin] ?? pluginResult.plugin.toUpperCase();
+    const color = PLUGIN_COLORS[pluginResult.name] ?? '\x1b[47m';
+    const label = PLUGIN_LABELS[pluginResult.name] ?? pluginResult.name.toUpperCase();
     lines.push(`  ${color}${BOLD} ${label} ${RESET}  ${pluginResult.matches.length} match(es)`);
 
     for (const match of pluginResult.matches) {

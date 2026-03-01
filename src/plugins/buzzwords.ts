@@ -1,4 +1,4 @@
-import type { SlobPlugin, PluginResult, Match, BuzzwordsPluginConfig } from '../types.js';
+import type { PatternPlugin, PluginResult, Match, BuzzwordsPluginConfig } from '../types.js';
 
 /**
  * Words and phrases that are statistically overrepresented in AI-generated text.
@@ -86,7 +86,7 @@ function buildWordPattern(words: string[]): RegExp {
   return new RegExp(`(?<![\\w-])(${escaped.join('|')})(?![\\w-])`, 'gi');
 }
 
-export class BuzzwordsPlugin implements SlobPlugin {
+export class BuzzwordsPlugin implements PatternPlugin {
   readonly name = 'buzzwords';
   private pattern: RegExp;
   private wordSet: Set<string>;

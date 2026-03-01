@@ -1,4 +1,4 @@
-import type { SlobPlugin, PluginResult, Match, UnicodePluginConfig } from '../types.js';
+import type { PatternPlugin, PluginResult, Match, UnicodePluginConfig } from '../types.js';
 
 /**
  * Unicode ranges that are suspicious in plain-text submissions.
@@ -32,7 +32,7 @@ function isInSuspiciousRange(
   return null;
 }
 
-export class UnicodePlugin implements SlobPlugin {
+export class UnicodePlugin implements PatternPlugin {
   readonly name = 'unicode';
   private ranges: Array<{ start: number; end: number; reason: string }>;
 

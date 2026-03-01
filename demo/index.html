@@ -384,6 +384,67 @@
       letter-spacing: 0.05em;
     }
 
+
+    /* ── Score meter ─────────────────────────── */
+    .score-section {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .score-meter {
+      margin-bottom: 14px;
+    }
+
+    .score-meter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .score-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .score-bar-track {
+      background: var(--border);
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease, background 0.4s ease;
+    }
+
+    .score-findings {
+      margin-top: 8px;
+    }
+
+    .score-finding {
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-top: 4px;
+      border-left: 2px solid var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .score-finding.high   { border-color: var(--typo-border); background: var(--typo-bg); }
+    .score-finding.medium { border-color: var(--uni-border);  background: var(--uni-bg); }
+    .score-finding.low    { border-color: var(--muted); }
+
+    .score-skipped {
+      font-size: 11px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
     /* ── Scrollbars ──────────────────────── */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -459,6 +520,13 @@
     <div class="sidebar-title" style="padding:12px 16px 0;">Matches</div>
     <div class="match-list" id="match-list">
       <div class="empty-state">No matches yet.<br>Type or paste text to begin.</div>
+    </div>
+
+
+    <!-- Score plugins -->
+    <div class="score-section" id="score-section" style="display:none;">
+      <div class="sidebar-title" style="margin-bottom:10px;">Analysis Scores</div>
+      <div id="score-meters"></div>
     </div>
 
     <!-- Legend -->
@@ -584,7 +652,100 @@ function analyze(text, enabled) {
   if (enabled.buzzwords)  results.push(analyzeWords(text, BUZZ_PATTERN, 'buzzwords', w => `AI buzzword: "${w.toLowerCase()}"`));
   if (enabled.unnatural)  results.push(analyzeWords(text, UNAT_PATTERN, 'unnatural', w => `Unnatural word: "${w.toLowerCase()}"`));
   const allMatches = results.flatMap(r => r.matches).sort((a,b) => a.index - b.index);
-  return { flagged: results.some(r => r.flagged), plugins: results, allMatches };
+  const suResult = analyzeSentenceUniformity(text);
+  const scoredPlugins = [suResult];
+  const flagged = results.some(r => r.flagged) || scoredPlugins.some(r => !r.skipped && r.score > 0);
+  return { flagged, plugins: results, scoredPlugins, allMatches };
+}
+
+
+// ── Sentence Uniformity ───────────────────────────────────────────────────────
+
+const ABBREV_RE = /\b(Dr|Mr|Mrs|Ms|Prof|Sr|Jr|vs|e\.g|i\.e|etc|No|Fig|al|ca|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.(?=\s)/gi;
+
+function splitSentences(text) {
+  const protected_ = text.replace(ABBREV_RE, m => m.slice(0,-1) + '\x00');
+  return protected_
+    .split(/(?<=[.!?])\s+(?=[A-Z\u00C0-\u00DC])/)
+    .map(s => s.replace(/\x00/g, '.').trim())
+    .filter(s => s.split(/\s+/).filter(w => w.length > 0).length >= 2);
+}
+
+function analyzeSentenceUniformity(text, cfg = {}) {
+  const minSentences  = cfg.minSentences  ?? 6;
+  const stddevFloor   = cfg.stddevFloor   ?? 4.5;
+  const stddevCeiling = cfg.stddevCeiling ?? 12.0;
+  const penaltyShort  = cfg.penaltyShort  ?? 0.15;
+
+  const sentences = splitSentences(text);
+  if (sentences.length < minSentences) {
+    return { plugin: 'sentenceUniformity', score: 0, skipped: true,
+      skipReason: `Only ${sentences.length} sentence(s); need at least ${minSentences}`, findings: [] };
+  }
+
+  const lengths = sentences.map(s => s.split(/\s+/).filter(w => w.length > 0).length);
+  const mn = lengths.reduce((a,b) => a+b, 0) / lengths.length;
+  const variance = lengths.reduce((a,b) => a + (b-mn)**2, 0) / lengths.length;
+  const sd = Math.sqrt(variance);
+
+  let score;
+  if (sd <= stddevFloor) score = 1.0;
+  else if (sd >= stddevCeiling) score = 0.0;
+  else score = 1.0 - (sd - stddevFloor) / (stddevCeiling - stddevFloor);
+
+  const findings = [];
+  if (score > 0) {
+    const severity = score >= 0.7 ? 'high' : score >= 0.35 ? 'medium' : 'low';
+    findings.push({
+      label: 'low_sentence_stddev', severity,
+      detail: `Stddev: ${sd.toFixed(2)} words | Mean: ${mn.toFixed(1)} words | ${lengths.length} sentences`,
+      evidence: { sentenceCount: lengths.length, meanWords: mn, stddevWords: sd, lengths },
+    });
+  }
+  if (score > 0 && mn < 15) {
+    score = Math.min(1.0, score + penaltyShort);
+    findings.push({
+      label: 'short_uniform_sentences', severity: 'medium',
+      detail: `Short + uniform prose (mean ${mn.toFixed(1)} words). AI listicle penalty applied.`,
+      evidence: { meanWords: mn },
+    });
+  }
+
+  return { plugin: 'sentenceUniformity', score: parseFloat(score.toFixed(4)), skipped: false, findings };
+}
+
+function renderScoreMeter(result) {
+  const LABELS = { sentenceUniformity: 'Sentence Uniformity' };
+  const label = LABELS[result.plugin] ?? result.plugin;
+
+  if (result.skipped) {
+    return `<div class="score-meter">
+      <div class="score-meter-header">
+        <span>${label}</span>
+        <span class="score-skipped">${escapeHtml(result.skipReason ?? 'skipped')}</span>
+      </div>
+    </div>`;
+  }
+
+  const pct = Math.round(result.score * 100);
+  const barColor = result.score >= 0.7 ? 'var(--typo-border)' : result.score >= 0.35 ? 'var(--uni-border)' : '#50C878';
+
+  const findingsHtml = result.findings.map(f =>
+    `<div class="score-finding ${f.severity}">
+      <strong>${escapeHtml(f.label)}</strong><br>${escapeHtml(f.detail)}
+    </div>`
+  ).join('');
+
+  return `<div class="score-meter">
+    <div class="score-meter-header">
+      <span>${label}</span>
+      <span class="score-value" style="color:${barColor};">${pct}%</span>
+    </div>
+    <div class="score-bar-track">
+      <div class="score-bar-fill" style="width:${pct}%;background:${barColor};"></div>
+    </div>
+    ${findingsHtml ? `<div class="score-findings">${findingsHtml}</div>` : ''}
+  </div>`;
 }
 
 // ── Rendering ────────────────────────────────────────────────────────────────
@@ -676,7 +837,17 @@ function run() {
   });
 
   // Match list
-  if (!result.allMatches.length) {
+  // Score meters
+  const scoreSection = document.getElementById('score-section');
+  const scoreMeters  = document.getElementById('score-meters');
+  if (result.scoredPlugins && result.scoredPlugins.length > 0) {
+    scoreSection.style.display = '';
+    scoreMeters.innerHTML = result.scoredPlugins.map(renderScoreMeter).join('');
+  } else {
+    scoreSection.style.display = 'none';
+  }
+
+    if (!result.allMatches.length) {
     matchList.innerHTML = '<div class="empty-state">No matches — text looks clean ✓</div>';
     return;
   }

@@ -75,7 +75,7 @@ export function renderHtml(text: string, result: SmellcheckResult): string {
  */
 export function renderLegendHtml(): string {
   const items = Object.entries(PLUGIN_COLORS)
-    .map(([plugin, color]) =>
+    .map(([_plugin, color]) =>
       `<span class="smellcheck-legend-item" style="background:${color.bg};border:1px solid ${color.border};padding:2px 8px;border-radius:3px;font-size:0.85em;">${color.label}</span>`
     )
     .join(' ');
@@ -108,4 +108,54 @@ export function renderSummaryHtml(result: SmellcheckResult): string {
   ⚠ AI fingerprints detected:
   <ul style="margin:4px 0;padding-left:20px;">${rows}</ul>
 </div>`;
+}
+
+/**
+ * Renders ScorePlugin results as HTML score meters with findings.
+ */
+export function renderScoredPluginsHtml(scoredPlugins: import('../types.js').ScorePluginResult[]): string {
+  if (scoredPlugins.length === 0) return '';
+
+  const LABELS: Record<string, string> = {
+    sentenceUniformity: 'Sentence Uniformity',
+  };
+
+  const SEVERITY_COLOR: Record<string, string> = {
+    low: '#888',
+    medium: '#FFC107',
+    high: '#FF5050',
+  };
+
+  const sections = scoredPlugins.map(r => {
+    const label = LABELS[r.plugin] ?? r.plugin;
+
+    if (r.skipped) {
+      return `<div class="smellcheck-scored" style="margin-bottom:12px;">
+  <strong style="font-size:0.9em;">${label}</strong>
+  <span style="color:#888;font-size:0.8em;margin-left:8px;">skipped — ${escapeHtml(r.skipReason ?? '')}</span>
+</div>`;
+    }
+
+    const pct = Math.round(r.score * 100);
+    const barColor = r.score >= 0.7 ? '#FF5050' : r.score >= 0.35 ? '#FFC107' : '#50C878';
+
+    const findingsHtml = r.findings.map(f => `
+  <div style="margin-top:6px;padding:6px 8px;background:#f8f8f8;border-left:3px solid ${SEVERITY_COLOR[f.severity]};font-size:0.82em;line-height:1.4;">
+    <strong>${escapeHtml(f.label)}</strong><br>
+    ${escapeHtml(f.detail)}
+  </div>`).join('');
+
+    return `<div class="smellcheck-scored" style="margin-bottom:16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+    <strong style="font-size:0.9em;">${label}</strong>
+    <span style="font-size:0.85em;font-weight:700;color:${barColor};">${pct}%</span>
+  </div>
+  <div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden;">
+    <div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px;transition:width 0.3s;"></div>
+  </div>
+  ${findingsHtml}
+</div>`;
+  });
+
+  return `<div class="smellcheck-scored-plugins">${sections.join('')}</div>`;
 }
