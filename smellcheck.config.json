@@ -1,0 +1,16 @@
+{
+  "plugins": {
+    "typography": true,
+    "unicode": true,
+    "buzzwords": {
+      "enabled": true,
+      "extra": [],
+      "exclude": []
+    },
+    "unnatural": {
+      "enabled": true,
+      "extra": [],
+      "exclude": []
+    }
+  }
+}
