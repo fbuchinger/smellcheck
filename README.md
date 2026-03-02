@@ -4,7 +4,9 @@
 
 Smellcheck scans text for patterns that frequently appear in AI-generated writing: unusual punctuation characters, overused AI buzzwords, and vocabulary that people recognize but almost never type themselves.
 
-**Important caveat:** smellcheck can tell you that a text *looks suspicious* — it cannot reliably tell you that a text *was* written by AI. A flagged text might have been written by a human who just loves em dashes. A clean text could still be AI-generated. Use the results as a signal to guide human review, not as a verdict. **Smellcheck is in an early alpha stage, use it with caution.**
+**Important caveat:** smellcheck can tell you that a text *looks suspicious* — it cannot reliably tell you that a text *was* written by AI. A flagged text might have been written by a human who just loves em dashes. A clean text could still be AI-generated. Use the results as a signal to guide human review, not as a verdict. 
+
+**Smellcheck is in an early alpha stage, use it with caution. Currently, it only works for English texts.**
 
 👉 **[Try the live demo](http://fbuchinger.github.io/smellcheck)**
 
@@ -23,12 +25,11 @@ Smellcheck uses **static analysis only** — no machine learning, no API calls, 
 
 ## Install
 
-The package is not yet published to npm. Install directly from GitHub:
+The package is not yet published to npm. Install directly from GitHub using npm/NodeJS:
 
 ```bash
 # npm
 npm install github:fbuchinger/smellcheck
-
 ```
 
 ---
@@ -38,7 +39,7 @@ npm install github:fbuchinger/smellcheck
 ### Example
 
 ```bash
->echo "…and there are many — of this paradigm shift 🌟." | smellcheck
+> echo "…and there are many — of this paradigm shift 🌟." | smellcheck
 "…and there are many — of this paradigm shift 🌟."
 
 
@@ -278,3 +279,4 @@ interface Match {
 ## License
 
 MIT
+GenAI tools assisted in the creation of smellcheck
