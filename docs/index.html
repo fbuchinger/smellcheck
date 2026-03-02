@@ -3,26 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smellcheck — Detecting AI smells in your text</title>
+  <title>🦨 Smellcheck — Finding potential AI smells in your texts.</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:        #0E0F11;
-      --surface:   #17191D;
-      --border:    #2A2D33;
-      --text:      #E8EAF0;
-      --muted:     #6B7180;
-      --accent:    #F0F060;
+      --bg:        #F5F6F8;
+      --surface:   #FFFFFF;
+      --border:    #DDE1E8;
+      --text:      #1A1D23;
+      --muted:     #7A8394;
+      --accent:    #1A56DB;
 
-      --typo-bg:   rgba(255, 80, 80, 0.18);
-      --typo-border: #FF5050;
-      --uni-bg:    rgba(255, 190, 50, 0.18);
-      --uni-border: #FFBE32;
-      --buzz-bg:   rgba(80, 160, 255, 0.18);
-      --buzz-border: #50A0FF;
-      --unat-bg:   rgba(180, 100, 255, 0.18);
-      --unat-border: #B464FF;
+      --typo-bg:   rgba(220, 38, 38, 0.10);
+      --typo-border: #DC2626;
+      --uni-bg:    rgba(217, 119, 6, 0.12);
+      --uni-border: #D97706;
+      --buzz-bg:   rgba(37, 99, 235, 0.10);
+      --buzz-border: #2563EB;
+      --unat-bg:   rgba(124, 58, 237, 0.10);
+      --unat-border: #7C3AED;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -50,7 +50,7 @@
       font-size: 28px;
       font-weight: 800;
       letter-spacing: -0.5px;
-      color: var(--accent);
+      color: #1A1D23;
     }
 
     .logo-sub {
@@ -66,7 +66,8 @@
       flex: 1;
       display: grid;
       grid-template-columns: 1fr 340px;
-      grid-template-rows: 1fr auto;
+      /*grid-template-rows: 1fr auto;*/
+      grid-template-rows: auto 1fr;
       gap: 0;
       height: calc(100vh - 89px);
     }
@@ -76,6 +77,7 @@
       display: flex;
       flex-direction: column;
       border-right: 1px solid var(--border);
+      overflow: hidden;
     }
 
     .pane-header {
@@ -113,23 +115,29 @@
       transition: background 0.15s, border-color 0.15s;
     }
 
-    button:hover { background: #22252C; border-color: #3A3D44; }
+    button:hover { background: #EEF0F4; border-color: #BEC4CE; }
 
     button.primary {
       background: var(--accent);
-      color: #0E0F11;
+      color: #FFFFFF;
       border-color: var(--accent);
       font-weight: 700;
     }
 
-    button.primary:hover { background: #E0E050; }
+    button.primary:hover { background: #1647C0; }
 
     textarea {
       flex: 1;
-      background: transparent;
+      flex: 0 0 auto;
+      height: 30vh;
+      min-height: 120px;
+      max-height: 30vh;
+      background: var(--surface);
       border: none;
+      border-bottom: 1px solid var(--border);
       outline: none;
       resize: none;
+      overflow-y: auto;
       color: var(--text);
       font-family: 'DM Mono', monospace;
       font-size: 14px;
@@ -145,6 +153,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      flex: 1;
     }
 
     .preview-content {
@@ -218,7 +227,7 @@
       padding: 12px 14px;
       border-radius: 6px;
       border: 1px solid var(--border);
-      background: var(--surface);
+      background: var(--bg);
       transition: all 0.2s;
     }
 
@@ -324,6 +333,8 @@
       flex: 1;
       overflow-y: auto;
       padding: 8px;
+      min-height: 0px;
+      max-height: 720px;
     }
 
     .match-item {
@@ -384,6 +395,65 @@
       letter-spacing: 0.05em;
     }
 
+
+
+    /* ── Tooltips ────────────────────────── */
+    .tooltip-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .tooltip-icon {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+      margin-left: 5px;
+      flex-shrink: 0;
+      font-family: 'DM Mono', monospace;
+      transition: background 0.15s;
+      line-height: 1;
+    }
+
+    .tooltip-icon:hover { background: var(--muted); color: white; }
+
+    .tooltip-bubble {
+      display: none;
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      transform: translateX(-50%);
+      background: #1A1D23;
+      color: #F0F2F5;
+      font-size: 11px;
+      line-height: 1.5;
+      padding: 8px 10px;
+      border-radius: 5px;
+      width: 210px;
+      z-index: 100;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .tooltip-bubble::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #1A1D23;
+    }
+
+    .tooltip-wrap:hover .tooltip-bubble { display: block; }
 
     /* ── Score meter ─────────────────────────── */
     .score-section {
@@ -446,9 +516,10 @@
     }
 
     /* ── Scrollbars ──────────────────────── */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #BEC4CE; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9AA0AD; }
 
     /* ── Responsive ──────────────────────── */
     @media (max-width: 768px) {
@@ -465,8 +536,8 @@
 <body>
 
 <header>
-  <div class="logo">👃 smellcheck</div>
-  <div class="logo-sub">detecting AI smells in your texts</div>
+  <div class="logo">🦨 Smellcheck</div>
+  <div class="logo-sub">Finding AI smells in your texts  <span style="color:red;">⚠ Early prototype  - <a href="https://github.com/fbuchinger/smellcheck" target="_new">read the docs</a>! ⚠</span></div>
 </header>
 
 <main>
@@ -482,7 +553,7 @@
     </div>
     <textarea
       id="input"
-      placeholder="Paste or type text here to analyze it for AI smells…"
+      placeholder="Paste or type text here to analyze it for AI smells..."
       spellcheck="false"
     ></textarea>
   </div>
@@ -769,10 +840,14 @@ function renderHighlighted(text, allMatches) {
 // ── State & UI ───────────────────────────────────────────────────────────────
 
 const PLUGINS = [
-  { id: 'typography', label: 'Typography',  color: 'var(--typo-border)' },
-  { id: 'unicode',    label: 'Unicode',     color: 'var(--uni-border)' },
-  { id: 'buzzwords',  label: 'Buzzwords',   color: 'var(--buzz-border)' },
-  { id: 'unnatural',  label: 'Unnatural',   color: 'var(--unat-border)' },
+  { id: 'typography', label: 'Typography', color: 'var(--typo-border)',
+    tip: 'Detects suspicious punctuation characters that are hard to type manually: em dashes (—), non-breaking spaces, zero-width chars, curly quotes, and ellipsis characters. Attention: also word processors can introduce these characters through their auto-correct feature' },
+  { id: 'unicode',    label: 'Unicode',    color: 'var(--uni-border)',
+    tip: 'Flags emoji, pictograms, and decorative Unicode symbols from blocks rarely found in genuine plain-text submissions.' },
+  { id: 'buzzwords',  label: 'Buzzwords',  color: 'var(--buzz-border)',
+    tip: 'Matches words and phrases statistically overrepresented in AI output: "delve", "tapestry", "holistic", "it\'s worth noting", "in conclusion", etc.' },
+  { id: 'unnatural',  label: 'Unnatural',  color: 'var(--unat-border)',
+    tip: 'Catches vocabulary humans recognise but rarely reach for when typing: "aforementioned", "heretofore", "whilst", "elucidate", "notwithstanding", Latin phrases, etc.' },
 ];
 
 const enabled = { typography: true, unicode: true, buzzwords: true, unnatural: true };
@@ -786,6 +861,10 @@ PLUGINS.forEach(p => {
     <div class="plugin-name">
       <div class="plugin-dot" style="background:${p.color}"></div>
       <span>${p.label}</span>
+      <span class="tooltip-wrap">
+        <span class="tooltip-icon">?</span>
+        <span class="tooltip-bubble">${p.tip}</span>
+      </span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <span class="plugin-count" id="count-${p.id}">—</span>
@@ -827,7 +906,7 @@ function run() {
   // Status
   badge.className = `status-badge ${result.flagged ? 'flagged' : 'clean'}`;
   label.textContent = result.flagged
-    ? `${result.allMatches.length} AI smell${result.allMatches.length !== 1 ? 's' : ''} found`
+    ? `${result.allMatches.length} potential AI smell${result.allMatches.length !== 1 ? 's' : ''} found`
     : 'Looks clean';
 
   // Counts

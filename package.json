@@ -1,7 +1,7 @@
 {
   "name": "smellcheck",
   "version": "0.1.0",
-  "description": "Static analyzer that detects AI-generated text fingerprints",
+  "description": "Static analyzer that detects AI-generated smells, i.e. patterns or metrics that indicate GenAI authorship",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -38,5 +38,9 @@
     "cli",
     "nlp"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fbuchinger/smellcheck"
+  }
 }
